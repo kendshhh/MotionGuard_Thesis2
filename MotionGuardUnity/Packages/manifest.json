@@ -1,0 +1,16 @@
+{
+  "dependencies": {
+    "com.coplaydev.unity-mcp": "https://github.com/CoplayDev/unity-mcp.git?path=/MCPForUnity#main",
+    "com.github.homuler.mediapipe": "file:com.github.homuler.mediapipe-0.16.3.tgz",
+    "com.unity.cinemachine": "3.1.7",
+    "com.unity.cloud.gltfast": "6.14.1",
+    "com.unity.collab-proxy": "2.0.5",
+    "com.unity.device-simulator.devices": "1.0.1",
+    "com.unity.probuilder": "5.2.4",
+    "com.unity.test-framework": "1.1.33",
+    "com.unity.textmeshpro": "3.0.6",
+    "com.unity.visualeffectgraph": "14.0.12",
+    "com.unity.modules.assetbundle": "1.0.0",
+    "com.unity.modules.audio": "1.0.0"
+  }
+}

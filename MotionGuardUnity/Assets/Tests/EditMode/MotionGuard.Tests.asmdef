@@ -1,0 +1,6 @@
+{
+  "name": "MotionGuard.Tests",
+  "references": ["MotionGuard.Core"],
+  "includePlatforms": ["Editor"],
+  "optionalUnityReferences": ["TestAssemblies"]
+}

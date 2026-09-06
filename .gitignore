@@ -1,0 +1,20 @@
+@"
+mediapipe_env/
+output/
+tmp/
+__pycache__/
+*.pyc
+
+MotionGuardUnity/Library/
+MotionGuardUnity/Temp/
+MotionGuardUnity/Logs/
+MotionGuardUnity/Obj/
+MotionGuardUnity/UserSettings/
+MotionGuardUnity/Build/
+MotionGuardUnity/Builds/
+
+.vs/
+.idea/
+.DS_Store
+Thumbs.db
+"@ | Set-Content -Encoding utf8 .gitignore

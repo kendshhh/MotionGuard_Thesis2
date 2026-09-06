@@ -1,0 +1,12 @@
+{
+  "techniques": [
+    { "id":"punch", "displayName":"Controlled Straight Punch", "tier":0, "referencePath":"MotionGuard/references/punch.json", "readyForEvaluation":false, "feedbackCues":["Extend one arm with control while keeping the opposite hand in guard."], "basePoints":100 },
+    { "id":"block", "displayName":"Two-Arm High Block", "tier":0, "referencePath":"MotionGuard/references/block.json", "readyForEvaluation":false, "feedbackCues":["Raise both forearms into the trainer-approved guard position."], "basePoints":100 },
+    { "id":"escape", "displayName":"Protective Step-Back Exit", "tier":0, "referencePath":"MotionGuard/references/escape.json", "readyForEvaluation":false, "feedbackCues":["Keep your guard up and use the trainer-approved balanced exit."], "basePoints":100 },
+    { "id":"amateur_01", "displayName":"Trainer-approved Amateur Technique", "tier":1, "referencePath":"MotionGuard/references/amateur_01.json", "readyForEvaluation":false, "feedbackCues":["Follow the trainer-approved demonstration slowly."], "basePoints":150 },
+    { "id":"advanced_01", "displayName":"Trainer-approved Advanced Technique 1", "tier":2, "referencePath":"MotionGuard/references/advanced_01.json", "readyForEvaluation":false, "feedbackCues":["Prioritize control over speed."], "basePoints":200 },
+    { "id":"advanced_02", "displayName":"Trainer-approved Advanced Technique 2", "tier":2, "referencePath":"MotionGuard/references/advanced_02.json", "readyForEvaluation":false, "feedbackCues":["Prioritize stable posture and balance."], "basePoints":200 }
+  ],
+  "scoring": { "dtwWeight":0.55, "cosineWeight":0.45, "maxDtwDistance":1.25, "criticalThreshold":0.90, "cleanThreshold":0.72, "weakThreshold":0.45 },
+  "progression": { "amateurPoints":500, "advancedPoints":1500 }
+}

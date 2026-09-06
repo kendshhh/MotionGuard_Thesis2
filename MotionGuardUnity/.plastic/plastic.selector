@@ -1,0 +1,4 @@
+repository "Pose Detection/THESIS2_MotionGuard@1375779987415@cloud"
+  path "/"
+    br "/main"
+    co "/main"
