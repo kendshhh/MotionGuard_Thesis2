@@ -1,6 +1,6 @@
 """
 RECORD REFERENCE TECHNIQUES - ENHANCED VERSION
-With quality validation and multiple samples
+With quality validation, multiple samples, and scale-invariant player lock
 """
 
 import cv2
@@ -12,6 +12,7 @@ import time
 import math
 from datetime import datetime
 from collections import deque
+from player_lock import scan_for_player, PlayerLock
 
 # ===== CONFIGURATION =====
 TECHNIQUES = ["Punch", "Block", "Escape"]
@@ -153,8 +154,8 @@ def validate_recording(angles_list, technique_name):
     
     return True, "Quality check passed"
 
-def record_technique(technique_name, sample_num):
-    """Record a single technique sample with validation"""
+def record_technique(technique_name, sample_num, lock=None):
+    """Record a single technique sample with validation and player lock filter"""
     cap = cv2.VideoCapture(0)
     if not cap.isOpened():
         print(f"❌ Camera not found!")
@@ -177,6 +178,7 @@ def record_technique(technique_name, sample_num):
     recorded_keypoints = []
     recorded_feature_frames = []
     visibility_history = deque(maxlen=10)
+    bystander_frames_skipped = 0
     start_time = time.time()
     
     while time.time() - start_time < RECORD_DURATION:
@@ -189,21 +191,25 @@ def record_technique(technique_name, sample_num):
         
         if results.pose_landmarks:
             landmarks = results.pose_landmarks.landmark
-            angles = extract_angles(landmarks, frame.shape)
-            
-            if angles:
-                recorded_angles.append(angles)
-                recorded_feature_frames.append({"values": extract_unity_features(landmarks)})
-                
-                # Extract keypoints for DTW
-                keypoints = []
-                for lm in landmarks:
-                    keypoints.extend([lm.x, lm.y])
-                recorded_keypoints.append(keypoints)
-                
-                # Track visibility
-                visibility = sum([lm.visibility for lm in landmarks]) / len(landmarks)
-                visibility_history.append(visibility)
+            if lock is not None and not lock.accepts(landmarks):
+                bystander_frames_skipped += 1
+                cv2.putText(frame, "BYSTANDER DETECTED - SKIPPED", (10, 120),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 60, 255), 2)
+            else:
+                angles = extract_angles(landmarks, frame.shape)
+                if angles:
+                    recorded_angles.append(angles)
+                    recorded_feature_frames.append({"values": extract_unity_features(landmarks)})
+                    
+                    # Extract keypoints for DTW
+                    keypoints = []
+                    for lm in landmarks:
+                        keypoints.extend([lm.x, lm.y])
+                    recorded_keypoints.append(keypoints)
+                    
+                    # Track visibility
+                    visibility = sum([lm.visibility for lm in landmarks]) / len(landmarks)
+                    visibility_history.append(visibility)
         
         # Show feedback
         cv2.putText(frame, f"Recording: {technique_name}", (10, 30),
@@ -213,6 +219,9 @@ def record_technique(technique_name, sample_num):
         cv2.putText(frame, f"Time: {int(time.time() - start_time)}s/{RECORD_DURATION}s", (10, 90),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
         
+        if lock is not None:
+            lock.draw_overlay(frame, results.pose_landmarks.landmark if results.pose_landmarks else None)
+
         cv2.imshow("Record Technique", frame)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
@@ -236,7 +245,14 @@ def record_technique(technique_name, sample_num):
         values = [a.get(key, 0) for a in recorded_angles if a]
         avg_angles[key] = float(np.mean(values))
     
-    # Calculate standard deviation for confidence
+    std_angles = {}
+    for key in recorded_angles[0].keys():
+        values = [a.get(key, 0) for a in recorded_angles if a]
+        std_angles[key] = float(np.std(values))
+    
+    # Average keypoints for DTW
+    avg_keypoints = np.mean(recorded_keypoints, axis=0).tolist()
+    
     std_angles = {}
     for key in recorded_angles[0].keys():
         values = [a.get(key, 0) for a in recorded_angles if a]
@@ -282,13 +298,27 @@ def main():
     all_data = []
     successful_recordings = {t: 0 for t in TECHNIQUES}
     
+    # ── PLAYER SCAN PHASE ──
+    print("\n🔍 Initializing Player Scanner to prevent background passersby detection...")
+    cap_scan = cv2.VideoCapture(0)
+    lock = None
+    if cap_scan.isOpened():
+        try:
+            lock = scan_for_player(cap_scan, pose, mp_pose, scan_seconds=5.0)
+            print("🔒 Player successfully locked! Background passersby will be filtered out.\n")
+        except Exception as e:
+            print(f"⚠️ Scan failed or skipped ({e}). Proceeding without lock filter.\n")
+        finally:
+            cap_scan.release()
+            cv2.destroyAllWindows()
+    
     for technique in TECHNIQUES:
         print(f"\n📹 Recording {technique}...")
         successful = 0
         
         while successful < SAMPLES_PER_TECHNIQUE:
             input(f"\nPress ENTER to record {technique} - Sample {successful+1}")
-            data = record_technique(technique, successful)
+            data = record_technique(technique, successful, lock=lock)
             
             if data:
                 all_data.append(data)

@@ -9,6 +9,13 @@ import cv2
 import mediapipe as mp
 import math
 import time
+import sys
+
+if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
 
 # ===== LOAD TRAINED MODEL =====
 def load_model(filepath="trained_model/reference_model.json"):

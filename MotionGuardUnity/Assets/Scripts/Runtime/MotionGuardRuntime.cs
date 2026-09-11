@@ -17,7 +17,35 @@ namespace MotionGuard {
         void Awake(){store=new LocalDataStore(); Catalog=store.ReadStreaming<TechniqueCatalog>("MotionGuard/techniques.json"); Progress=store.Load<PlayerProgress>("player-progress.json"); foreach(var t in Catalog.techniques){if(!t.readyForEvaluation)continue;var r=store.ReadStreaming<ReferenceSequence>(t.referencePath); if(r!=null&&r.trainerApproved&&r.featureVersion==PoseMath.FeatureVersion&&r.frames!=null&&r.frames.Count>0)references[t.id]=r; else if(r!=null&&r.trainerApproved)Debug.LogWarning($"Reference '{t.id}' is not full-body feature version {PoseMath.FeatureVersion} and was ignored.");} }
         public bool CanSelect(TechniqueDefinition technique) => technique!=null&&technique.readyForEvaluation&&ProgressionService.IsUnlocked(technique.tier,Progress,Catalog);
         public void StartAttempt(string techniqueId){var t=Catalog.techniques.Find(x=>x.id==techniqueId); if(!CanSelect(t)){Status="This technique is locked or awaits trainer-approved reference data.";return;} StartCoroutine(Capture(t));}
-        IEnumerator Capture(TechniqueDefinition target){Status="Check lighting, clear background, and full-body framing."; yield return new WaitForSeconds(2); for(int i=3;i>0;i--){Status=i.ToString();yield return new WaitForSeconds(1);} Status="Perform the technique";var sequence=new List<FeatureFrame>();string failure=null;var start=Time.unscaledTime;
+        IEnumerator Capture(TechniqueDefinition target) {
+            Status = "Check lighting, clear background, and full-body framing.";
+            yield return new WaitForSeconds(1.5f);
+
+            // Scan phase: ensure player is locked so background passersby are ignored
+            if (poseBridge != null && !poseBridge.Lock.IsLocked) {
+                Status = "Scanning player — please stand center-frame...";
+                poseBridge.Lock.BeginScan(8.0f);
+                while (poseBridge.Lock.IsScanning) {
+                    Status = $"Scanning player... {(int)(poseBridge.Lock.ScanProgress * 100)}%";
+                    yield return null;
+                }
+                if (!poseBridge.Lock.IsLocked) {
+                    Status = "Scan timed out. Please stand center-frame and retry.";
+                    CompleteFailure(target, Time.unscaledTime, "Player scan failed or timed out");
+                    yield break;
+                }
+                Status = "Player locked! Get ready...";
+                yield return new WaitForSeconds(1.0f);
+            }
+
+            for (int i = 3; i > 0; i--) {
+                Status = i.ToString();
+                yield return new WaitForSeconds(1f);
+            }
+            Status = "Perform the technique";
+            var sequence = new List<FeatureFrame>();
+            string failure = null;
+            var start = Time.unscaledTime;
             while(Time.unscaledTime-start<captureSeconds){if(poseBridge==null||!poseBridge.HasFreshFrame){failure="No body detected";}else if(PoseMath.IsUsable(poseBridge.LatestFrame,out var reason)){sequence.Add(PoseMath.ToFeatures(poseBridge.LatestFrame));}else failure=reason;yield return null;}
             if(sequence.Count<minimumFrames){Status=failure??"Insufficient valid movement data. Try again.";CompleteFailure(target,start,Status);yield break;}
             var result=MotionEvaluator.Evaluate(sequence,references,Catalog.scoring);var points=ProgressionService.PointsFor(result.performance,target.basePoints);var record=CreateAttemptRecord(target.id,start,result,points);

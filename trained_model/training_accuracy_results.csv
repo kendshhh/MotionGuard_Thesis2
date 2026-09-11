@@ -1,0 +1,5 @@
+run_id,timestamp,technique,samples_count,cv_folds,mean_accuracy,mean_accuracy_pct,std_accuracy,min_accuracy,max_accuracy,confidence_threshold,quality_score,ref_sequence_frames,status
+RUN-20260911-163939,2026-09-11T16:39:39,Block,10,3,0.9997,99.97%,0.0001,0.9995,0.9998,0.98,0.9500,24,SUCCESS
+RUN-20260911-163939,2026-09-11T16:39:39,Escape,10,3,0.9971,99.71%,0.0005,0.9964,0.9975,0.97,0.9500,24,SUCCESS
+RUN-20260911-163939,2026-09-11T16:39:39,Punch,10,3,0.9996,99.96%,0.0002,0.9993,0.9997,0.98,0.9500,24,SUCCESS
+RUN-20260911-163939,2026-09-11T16:39:39,OVERALL_AVERAGE,30,N/A,0.9988,99.88%,0.0012,0.9971,0.9997,N/A,N/A,N/A,SUCCESS

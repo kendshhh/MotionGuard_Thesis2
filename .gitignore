@@ -1,4 +1,3 @@
-@"
 mediapipe_env/
 output/
 tmp/
@@ -15,6 +14,6 @@ MotionGuardUnity/Builds/
 
 .vs/
 .idea/
+.plastic/
 .DS_Store
 Thumbs.db
-"@ | Set-Content -Encoding utf8 .gitignore
